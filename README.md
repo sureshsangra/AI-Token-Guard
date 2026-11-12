@@ -10,6 +10,8 @@ Cut your LLM costs by **30 – 70 %** across OpenAI, Google Gemini, Anthropic Cl
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)](Dockerfile)
+[![GitHub Stars](https://img.shields.io/github/stars/sureshsangra/AI-Token-Guard?style=social)](https://github.com/sureshsangra/AI-Token-Guard)
+[![GitHub Forks](https://img.shields.io/github/forks/sureshsangra/AI-Token-Guard?style=social)](https://github.com/sureshsangra/AI-Token-Guard/fork)
 
 </div>
 
@@ -64,8 +66,8 @@ No prompt rewriting. No altered model outputs. Just fewer tokens going out.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/token-guard.git
-cd token-guard
+git clone https://github.com/sureshsangra/AI-Token-Guard.git
+cd AI-Token-Guard
 ```
 
 ### 2. Install dependencies
@@ -479,5 +481,7 @@ MIT — see [LICENSE](LICENSE) for details.
 Made with ❤️ to help developers spend less on tokens and more on building.
 
 **Star ⭐ the repo if Token Guard saves you money!**
+
+👉 **[github.com/sureshsangra/AI-Token-Guard](https://github.com/sureshsangra/AI-Token-Guard)**
 
 </div>
