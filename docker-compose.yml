@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  token-guard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: token-guard
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+    volumes:
+      - token_guard_data:/app/token_guard_data
+    environment:
+      - TOKEN_GUARD_PORT=8088
+      - TOKEN_GUARD_HOST=0.0.0.0
+      - ENABLE_EXACT_CACHE=true
+      - ENABLE_SEMANTIC_CACHE=true
+      - SEMANTIC_CACHE_THRESHOLD=0.85
+      - ENABLE_SCHEMA_MINIFIER=true
+      - ENABLE_HISTORY_CONDENSER=true
+      - ENABLE_PROMPT_PRUNER=true
+
+volumes:
+  token_guard_data:
