@@ -39,21 +39,29 @@ Your App / IDE
       ├──▶  OpenAI API
       ├──▶  Google Gemini API
       ├──▶  Anthropic Claude API
-      └──▶  DeepSeek API
+      ├──▶  xAI Grok API
+      ├──▶  DeepSeek API
+      ├──▶  Mistral AI & Codestral API
+      └──▶  Groq, Ollama & OpenRouter (200+ models)
 ```
 
 No prompt rewriting. No altered model outputs. Just fewer tokens going out.
 
 ---
 
-## Supported Models
+## Supported Models & Providers
 
-| Provider | Models |
-|---|---|
-| **OpenAI** | `gpt-4o`, `gpt-4o-mini`, `o1`, `o3-mini`, `gpt-4`, `gpt-3.5-turbo` |
-| **Google Gemini** | `gemini-2.0-flash`, `gemini-1.5-pro`, `gemini-1.5-flash` |
-| **Anthropic Claude** | `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022`, `claude-3-haiku-20240307` |
-| **DeepSeek** | `deepseek-chat`, `deepseek-reasoner` |
+| Provider | Supported Models | Routing Type |
+|---|---|---|
+| **xAI Grok** | `grok-4.7`, `grok-2`, `grok-beta`, `grok-2-vision` | Native OpenAI-compatible |
+| **OpenAI** | `gpt-4o`, `gpt-4o-mini`, `o1`, `o3-mini`, `gpt-4`, `gpt-3.5-turbo` | Native |
+| **Anthropic Claude** | `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022`, `claude-3-haiku-20240307` | Bidirectional Adapter |
+| **Google Gemini** | `gemini-2.0-flash`, `gemini-1.5-pro`, `gemini-1.5-flash` | Native OpenAI-compatible |
+| **DeepSeek** | `deepseek-chat`, `deepseek-reasoner` (R1) | Native OpenAI-compatible |
+| **Mistral AI** | `mistral-large-latest`, `codestral-latest`, `mistral-small` | Native OpenAI-compatible |
+| **Groq** | `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`, `mixtral` | Native OpenAI-compatible |
+| **Local LLMs / Ollama** | Any local model running on `http://localhost:11434` | Local proxy |
+| **OpenRouter** | 200+ open-source and proprietary models (`meta-llama/...`, etc.) | Gateway proxy |
 
 ---
 
@@ -61,7 +69,7 @@ No prompt rewriting. No altered model outputs. Just fewer tokens going out.
 
 ### Prerequisites
 - Python 3.9 or higher
-- An API key for at least one provider (OpenAI / Gemini / Anthropic / DeepSeek)
+- An API key for your chosen provider (xAI Grok / OpenAI / Gemini / Anthropic / DeepSeek)
 
 ### 1. Clone the repository
 

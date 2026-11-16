@@ -24,6 +24,11 @@ MODEL_PRICING_PER_M = {
     "gemini-1.5-pro": 2.50,
     "deepseek-chat": 0.27,
     "deepseek-reasoner": 0.55,
+    "grok": 3.00,
+    "mistral": 2.00,
+    "codestral": 1.00,
+    "llama": 0.60,
+    "qwen": 0.30,
 }
 
 def calculate_cost_saved(model: str, saved_tokens: int) -> float:

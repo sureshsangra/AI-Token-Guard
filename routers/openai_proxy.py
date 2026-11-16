@@ -138,10 +138,10 @@ async def chat_completions(request: Request):
 
     client = get_http_client()
 
-    # --- ROUTING LOGIC ---
+    # --- UNIVERSAL ROUTING LOGIC ---
 
-    # A. ANTHROPIC CLAUDE ROUTING & ADAPTATION
-    if "claude" in model.lower():
+    # 1. ANTHROPIC CLAUDE ROUTING & ADAPTATION
+    if "claude" in model.lower() or (client_auth and "sk-ant-" in client_auth):
         anthropic_body, anthropic_headers = AnthropicAdapter.openai_to_anthropic_payload(optimized_payload)
         api_key = extract_api_key(client_auth, settings.ANTHROPIC_API_KEY)
         anthropic_headers["x-api-key"] = api_key
@@ -178,8 +178,17 @@ async def chat_completions(request: Request):
             except Exception as e:
                 raise HTTPException(status_code=502, detail=f"Claude upstream error: {str(e)}")
 
-    # B. GOOGLE GEMINI ROUTING
-    elif "gemini" in model.lower():
+    # 2. XAI / GROK ROUTING (Supports grok-2, grok-beta, grok-4.7, etc.)
+    elif "grok" in model.lower() or (client_auth and "xai-" in client_auth):
+        api_key = extract_api_key(client_auth, settings.XAI_API_KEY)
+        upstream_url = f"{settings.XAI_BASE_URL}/chat/completions"
+        upstream_headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+
+    # 3. GOOGLE GEMINI ROUTING
+    elif "gemini" in model.lower() or (client_auth and "AIza" in client_auth):
         api_key = extract_api_key(client_auth, settings.GEMINI_API_KEY)
         upstream_url = f"{settings.GEMINI_BASE_URL}/chat/completions"
         upstream_headers = {
@@ -188,16 +197,50 @@ async def chat_completions(request: Request):
             "x-goog-api-key": api_key
         }
 
-    # C. DEEPSEEK ROUTING
+    # 4. DEEPSEEK ROUTING
     elif "deepseek" in model.lower():
-        api_key = extract_api_key(client_auth)
-        upstream_url = "https://api.deepseek.com/chat/completions"
+        api_key = extract_api_key(client_auth, settings.DEEPSEEK_API_KEY)
+        upstream_url = f"{settings.DEEPSEEK_BASE_URL}/chat/completions"
         upstream_headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}"
         }
 
-    # D. DEFAULT OPENAI ROUTING
+    # 5. MISTRAL AI / CODESTRAL ROUTING
+    elif "mistral" in model.lower() or "codestral" in model.lower() or "pixtral" in model.lower():
+        api_key = extract_api_key(client_auth, settings.MISTRAL_API_KEY)
+        upstream_url = f"{settings.MISTRAL_BASE_URL}/chat/completions"
+        upstream_headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+
+    # 6. GROQ ULTRA-FAST ROUTING
+    elif "groq" in model.lower() or (client_auth and "gsk_" in client_auth):
+        api_key = extract_api_key(client_auth, settings.GROQ_API_KEY)
+        upstream_url = f"{settings.GROQ_BASE_URL}/chat/completions"
+        upstream_headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+
+    # 7. OPENROUTER ROUTING (Universal Fallback for 200+ models)
+    elif "openrouter" in model.lower() or (client_auth and "sk-or-" in client_auth) or "/" in model:
+        api_key = extract_api_key(client_auth, settings.OPENROUTER_API_KEY)
+        upstream_url = f"{settings.OPENROUTER_BASE_URL}/chat/completions"
+        upstream_headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+
+    # 8. OLLAMA / LOCAL LLM ROUTING
+    elif "ollama" in model.lower() or "localhost" in model.lower():
+        upstream_url = f"{settings.OLLAMA_BASE_URL}/chat/completions"
+        upstream_headers = {
+            "Content-Type": "application/json"
+        }
+
+    # 9. DEFAULT OPENAI (AND UNIVERSAL OPENAI-COMPATIBLE FALLBACK)
     else:
         api_key = extract_api_key(client_auth, settings.OPENAI_API_KEY)
         upstream_url = f"{settings.OPENAI_BASE_URL}/chat/completions"
@@ -316,19 +359,39 @@ async def native_anthropic_messages(request: Request):
 
 @router.get("/models")
 async def list_models():
-    """Returns a list of supported models across OpenAI, Gemini, Claude, and DeepSeek."""
+    """Returns a list of supported models across OpenAI, Grok, Gemini, Claude, DeepSeek, and Mistral."""
     return {
         "object": "list",
         "data": [
+            # OpenAI
             {"id": "gpt-4o", "object": "model", "owned_by": "openai"},
             {"id": "gpt-4o-mini", "object": "model", "owned_by": "openai"},
             {"id": "o1", "object": "model", "owned_by": "openai"},
             {"id": "o3-mini", "object": "model", "owned_by": "openai"},
+            {"id": "gpt-4", "object": "model", "owned_by": "openai"},
+            {"id": "gpt-3.5-turbo", "object": "model", "owned_by": "openai"},
+            # xAI / Grok
+            {"id": "grok-beta", "object": "model", "owned_by": "xai"},
+            {"id": "grok-2", "object": "model", "owned_by": "xai"},
+            {"id": "grok-2-latest", "object": "model", "owned_by": "xai"},
+            {"id": "grok-2-vision-latest", "object": "model", "owned_by": "xai"},
+            {"id": "grok-4.7", "object": "model", "owned_by": "xai"},
+            # Google Gemini
             {"id": "gemini-2.0-flash", "object": "model", "owned_by": "google"},
             {"id": "gemini-1.5-pro", "object": "model", "owned_by": "google"},
+            {"id": "gemini-1.5-flash", "object": "model", "owned_by": "google"},
+            # Anthropic Claude
             {"id": "claude-3-5-sonnet-20241022", "object": "model", "owned_by": "anthropic"},
+            {"id": "claude-3-5-haiku-20241022", "object": "model", "owned_by": "anthropic"},
             {"id": "claude-3-haiku-20240307", "object": "model", "owned_by": "anthropic"},
+            # DeepSeek
             {"id": "deepseek-chat", "object": "model", "owned_by": "deepseek"},
-            {"id": "deepseek-reasoner", "object": "model", "owned_by": "deepseek"}
+            {"id": "deepseek-reasoner", "object": "model", "owned_by": "deepseek"},
+            # Mistral
+            {"id": "mistral-large-latest", "object": "model", "owned_by": "mistral"},
+            {"id": "codestral-latest", "object": "model", "owned_by": "mistral"},
+            # Groq & Open Source
+            {"id": "llama-3.3-70b-versatile", "object": "model", "owned_by": "groq"},
+            {"id": "llama-3.1-8b-instant", "object": "model", "owned_by": "groq"}
         ]
     }
