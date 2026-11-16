@@ -54,6 +54,17 @@ app.add_middleware(
 app.include_router(openai_router)
 app.include_router(metrics_router)
 
+# Root-level fallback endpoints for tools that point to base URL without /v1
+@app.get("/models")
+async def get_models_root():
+    from token_guard.routers.openai_proxy import list_models
+    return await list_models()
+
+@app.post("/chat/completions")
+async def chat_completions_root(request: Request):
+    from token_guard.routers.openai_proxy import chat_completions
+    return await chat_completions(request)
+
 # Mount Dashboard
 DASHBOARD_PATH = os.path.join(os.path.dirname(__file__), "dashboard", "index.html")
 

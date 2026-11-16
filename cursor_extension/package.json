@@ -1,0 +1,22 @@
+{
+  "name": "token-guard-cursor",
+  "displayName": "Token Guard Active Indicator",
+  "description": "Displays live Token Guard active status, tokens saved, and cost reductions directly in Cursor's status bar",
+  "version": "1.0.0",
+  "publisher": "sureshsangra",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tokenGuard.openDashboard",
+        "title": "Token Guard: Open Live Dashboard"
+      }
+    ]
+  }
+}

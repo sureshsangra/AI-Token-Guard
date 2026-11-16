@@ -34,6 +34,32 @@ def extract_api_key(client_auth_header: str, custom_key: str = None) -> str:
         return client_auth_header[7:].strip()
     return client_auth_header.strip()
 
+def detect_client(request: Request) -> str:
+    ua = request.headers.get("user-agent", "").lower()
+    for k, v in request.headers.items():
+        k_l = k.lower()
+        v_l = v.lower()
+        if "cursor" in k_l or "cursor" in v_l:
+            return "Cursor"
+        if "continue" in k_l or "continue" in v_l:
+            return "Continue.dev"
+        if "cline" in k_l or "cline" in v_l or "roo" in k_l:
+            return "Cline"
+    if "cursor" in ua:
+        return "Cursor"
+    if "code" in ua or "vscode" in ua:
+        return "VS Code"
+    if "python" in ua or "httpx" in ua or "requests" in ua:
+        return "Python SDK"
+    if "node" in ua or "axios" in ua or "undici" in ua:
+        return "Node.js SDK"
+    if "chrome" in ua or "mozilla" in ua or "safari" in ua:
+        return "Web Browser"
+    # Official TypeScript SDK headers commonly used by Cursor & VS Code extensions
+    if request.headers.get("x-stainless-os") or request.headers.get("x-stainless-lang"):
+        return "Cursor"
+    return "Cursor" if "localhost" in request.headers.get("host", "") else "API Client"
+
 @router.post("/chat/completions")
 async def chat_completions(request: Request):
     try:
@@ -41,6 +67,7 @@ async def chat_completions(request: Request):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON body")
 
+    client_name = detect_client(request)
     client_auth = request.headers.get("Authorization", "")
     model = body.get("model", "gpt-4o")
     stream = body.get("stream", False)
@@ -71,13 +98,15 @@ async def chat_completions(request: Request):
             optimized=0,
             saved=opt_result.tokens_saved,
             savings_pct=100.0,
-            cache_status=opt_result.cache_type
+            cache_status=opt_result.cache_type,
+            client=client_name
         )
         resp_data = opt_result.cached_response
         headers = {
             "X-TokenGuard-Savings": "100%",
             "X-TokenGuard-Saved-Tokens": str(opt_result.tokens_saved),
-            "X-TokenGuard-Status": opt_result.cache_type
+            "X-TokenGuard-Status": opt_result.cache_type,
+            "X-TokenGuard-Client": client_name
         }
         return Response(content=json.dumps(resp_data), media_type="application/json", headers=headers)
 
@@ -94,7 +123,8 @@ async def chat_completions(request: Request):
         optimized=opt_result.optimized_tokens,
         saved=opt_result.tokens_saved,
         savings_pct=opt_result.savings_percentage,
-        cache_status=opt_result.cache_type
+        cache_status=opt_result.cache_type,
+        client=client_name
     )
 
     savings_headers = {
@@ -102,7 +132,8 @@ async def chat_completions(request: Request):
         "X-TokenGuard-Original-Tokens": str(opt_result.original_tokens),
         "X-TokenGuard-Optimized-Tokens": str(opt_result.optimized_tokens),
         "X-TokenGuard-Saved-Tokens": str(opt_result.tokens_saved),
-        "X-TokenGuard-Status": "optimized"
+        "X-TokenGuard-Status": "optimized",
+        "X-TokenGuard-Client": client_name
     }
 
     client = get_http_client()

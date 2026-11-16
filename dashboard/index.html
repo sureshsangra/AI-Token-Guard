@@ -3,18 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Token Guard - Universal Token Optimization Monitor</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Token Guard — Live LLM Token Reduction & Cost Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --bg: #0b0f17;
-      --card-bg: #141b27;
-      --border: #222e42;
+      --bg: #090d16;
+      --card-bg: #121824;
+      --card-hover: #162032;
+      --border: #1f2a3d;
       --accent-cyan: #00f0ff;
       --accent-green: #00e676;
       --accent-purple: #b388ff;
-      --text: #e2e8f0;
-      --text-muted: #8492a6;
+      --accent-amber: #ffb300;
+      --text: #f1f5f9;
+      --text-muted: #8b9bb4;
       --danger: #ff5252;
     }
 
@@ -22,7 +25,7 @@
     body {
       background-color: var(--bg);
       color: var(--text);
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       padding: 24px;
       line-height: 1.5;
     }
@@ -31,34 +34,149 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 28px;
-      padding-bottom: 20px;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
       border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 16px;
     }
 
     .logo-group h1 {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 24px;
+      font-size: 22px;
       color: var(--accent-cyan);
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    .badge {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 12px;
-      background: rgba(0, 240, 255, 0.1);
-      border: 1px solid var(--accent-cyan);
-      color: var(--accent-cyan);
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
+    .status-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.4; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.15); }
+      100% { opacity: 0.4; transform: scale(0.9); }
+    }
+
+    .btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid transparent;
+    }
+
+    .btn-secondary {
+      background: #1a2233;
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover { background: #222d42; }
+
+    .btn-danger {
+      background: rgba(255, 82, 82, 0.12);
+      color: var(--danger);
+      border-color: rgba(255, 82, 82, 0.3);
+    }
+    .btn-danger:hover { background: rgba(255, 82, 82, 0.22); }
+
+    .btn-cyan {
+      background: rgba(0, 240, 255, 0.12);
+      color: var(--accent-cyan);
+      border-color: rgba(0, 240, 255, 0.35);
+    }
+    .btn-cyan:hover { background: rgba(0, 240, 255, 0.22); }
+
+    /* Stats Grid */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .stat-card:hover {
+      border-color: rgba(0, 240, 255, 0.25);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: -0.5px;
+    }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .val-green { color: var(--accent-green); }
+    .val-cyan { color: var(--accent-cyan); }
+    .val-purple { color: var(--accent-purple); }
+    .val-amber { color: var(--accent-amber); }
+
+    /* Chart Section */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
       gap: 18px;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 950px) {
+      .chart-grid { grid-template-columns: 1fr; }
     }
 
     .card {
@@ -66,176 +184,300 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
 
     .card-title {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
-
-    .card-value {
-      font-size: 32px;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .value-green { color: var(--accent-green); }
-    .value-cyan { color: var(--accent-cyan); }
-    .value-purple { color: var(--accent-purple); }
-
-    .main-grid {
-      display: grid;
-      grid-template-columns: 2fr 1.2fr;
-      gap: 20px;
-    }
-
-    @media (max-width: 900px) {
-      .main-grid { grid-template-columns: 1fr; }
-    }
-
-    .section-title {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
+    .chart-container {
+      position: relative;
+      height: 240px;
+      width: 100%;
+    }
+
+    /* Sessions Table */
+    .section-block {
+      margin-bottom: 24px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+      font-size: 12px;
       font-family: 'JetBrains Mono', monospace;
     }
 
     th {
       text-align: left;
-      padding: 10px 12px;
-      background: rgba(255, 255, 255, 0.03);
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.02);
       color: var(--text-muted);
       border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
     }
 
     td {
-      padding: 10px 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text);
     }
 
-    .pill {
-      display: inline-block;
-      padding: 2px 8px;
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .client-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
       border-radius: 6px;
       font-size: 11px;
       font-weight: 600;
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+    }
+    .client-cursor {
+      background: rgba(179, 136, 255, 0.12);
+      color: var(--accent-purple);
+      border-color: rgba(179, 136, 255, 0.35);
+    }
+    .client-chrome {
+      background: rgba(0, 230, 118, 0.12);
+      color: var(--accent-green);
+      border-color: rgba(0, 230, 118, 0.35);
     }
 
-    .pill-hit { background: rgba(0, 230, 118, 0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
-    .pill-opt { background: rgba(0, 240, 255, 0.15); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+    .pill-hit {
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .pill-opt {
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid var(--accent-cyan);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* Cursor Setup Tip Banner */
+    .tip-banner {
+      background: linear-gradient(90deg, rgba(179, 136, 255, 0.08), rgba(0, 240, 255, 0.04));
+      border: 1px solid rgba(179, 136, 255, 0.25);
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
 
     .interactive-box textarea {
       width: 100%;
-      height: 120px;
-      background: #0d121c;
+      height: 90px;
+      background: #0b0f17;
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text);
-      padding: 12px;
+      padding: 10px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
       resize: vertical;
-      margin-bottom: 10px;
-    }
-
-    .interactive-box button {
-      background: var(--accent-cyan);
-      color: #050811;
-      border: none;
-      font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-    }
-
-    .interactive-box button:hover {
-      opacity: 0.9;
-    }
-
-    .code-block {
-      background: #0d121c;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: #a5d6ff;
-      overflow-x: auto;
-      margin-top: 10px;
+      margin-bottom: 8px;
     }
   </style>
 </head>
 <body>
 
+  <!-- HEADER -->
   <header>
     <div class="logo-group">
-      <h1>🛡️ Token Guard <span class="badge">RTM Active</span></h1>
-      <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Universal Token Optimization Proxy for OpenAI, Gemini & Claude</p>
+      <h1>🛡️ Token Guard <span style="font-size: 11px; padding: 2px 8px; border-radius: 6px; background: rgba(0,230,118,0.12); color: var(--accent-green); border: 1px solid var(--accent-green);">v1.0.0 Ready</span></h1>
+      <p style="color: var(--text-muted); font-size: 12px; margin-top: 3px;">
+        Universal Token Reduction & Real-time Cost Savings Proxy
+      </p>
     </div>
-    <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted);">
-      Endpoint: <span style="color: var(--accent-cyan);">http://localhost:8088/v1</span>
+
+    <div class="header-actions">
+      <div class="status-badge" id="cursor-status-pill">
+        <span class="status-pulse" id="cursor-pulse"></span>
+        <span id="cursor-status-text">Cursor: Listening on :8088</span>
+      </div>
+
+      <div class="status-badge" style="border-color: rgba(255,255,255,0.15); color: var(--text-muted);">
+        📅 <span id="header-today-date" style="color: var(--text); margin-left: 4px;">Today</span>
+      </div>
+
+      <button class="btn btn-secondary" onclick="simulateRequest()">
+        ⚡ Simulate
+      </button>
+
+      <button class="btn btn-danger" onclick="confirmResetAll()">
+        🗑️ Reset All Stats
+      </button>
     </div>
   </header>
 
-  <div class="stats-grid">
-    <div class="card">
-      <div class="card-title">Total Tokens Saved</div>
-      <div class="card-value value-green" id="stat-saved">0</div>
+  <!-- CURSOR SETUP VERIFICATION NOTICE -->
+  <div class="tip-banner">
+    <div>
+      <span style="font-weight: 600; color: var(--accent-purple);">💡 Connecting Cursor to Token Guard:</span>
+      <span style="color: var(--text-muted); margin-left: 6px;">
+        1. In Cursor Settings → Models: toggle <b>"Use OpenAI API Key" ON</b> and set Base URL to <code>http://localhost:8088/v1</code>.
+        2. In Cursor Chat, select an OpenAI model (e.g. <b>gpt-4o</b>).
+      </span>
     </div>
-    <div class="card">
-      <div class="card-title">Average Reduction</div>
-      <div class="card-value value-cyan" id="stat-pct">0%</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Estimated $ Saved</div>
-      <div class="card-value value-purple" id="stat-dollars">$0.00</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Cache Hit Rate</div>
-      <div class="card-value" id="stat-hits">0 / 0</div>
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-cyan);">
+      Base URL: http://localhost:8088/v1
     </div>
   </div>
 
-  <div class="main-grid">
-    <div class="card">
-      <div class="section-title">
-        <span>Live Request Feed</span>
-        <div style="display:flex; gap:10px; align-items:center;">
-          <button onclick="simulateRequest()" style="background:rgba(0,240,255,0.15); color:var(--accent-cyan); border:1px solid var(--accent-cyan); border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer; font-weight:600;">⚡ Simulate Test Event</button>
-          <span style="font-size: 12px; color: var(--text-muted);" id="request-count">0 requests</span>
-        </div>
+  <!-- STATS KPI GRID (TODAY + TOTAL) -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">
+        <span>Today Tokens Saved</span>
+        <span id="today-pct-badge" style="color: var(--accent-green);">0%</span>
       </div>
-      <div style="overflow-x: auto;">
+      <div class="stat-value val-green" id="stat-today-saved">0</div>
+      <div class="stat-sub">
+        Original: <span id="stat-today-orig">0</span> | Optimized: <span id="stat-today-opt">0</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">
+        <span>Today $ Cost Saved</span>
+        <span style="color: var(--accent-purple);">Est. Model Rates</span>
+      </div>
+      <div class="stat-value val-purple" id="stat-today-cost">$0.0000</div>
+      <div class="stat-sub">
+        All-time Savings: <span id="stat-total-cost" style="color: var(--accent-cyan);">$0.0000</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">
+        <span>Requests Processed</span>
+        <span id="stat-today-reqs">0 today</span>
+      </div>
+      <div class="stat-value val-cyan" id="stat-total-reqs">0</div>
+      <div class="stat-sub">
+        Cache Hits: <span id="stat-cache-hits">0</span> (100% saved)
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">
+        <span>Active Clients</span>
+        <span style="color: var(--accent-amber);">Auto-Detected</span>
+      </div>
+      <div class="stat-value val-amber" id="stat-client-count">1</div>
+      <div class="stat-sub" id="stat-active-client-names">
+        Cursor, Chrome Extension
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS SECTION -->
+  <div class="chart-grid">
+    <!-- Chart 1: Timeline -->
+    <div class="card">
+      <div class="card-title">
+        <span>📈 Real-Time Token Reduction (Last 20 Requests)</span>
+        <span style="font-size: 11px; color: var(--text-muted); font-weight: 400;">Original vs Optimized</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="timelineChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart 2: Cost Breakdown / Efficiency Gauge -->
+    <div class="card">
+      <div class="card-title">
+        <span>💰 Cost & Token Efficiency</span>
+        <span style="font-size: 11px; color: var(--text-muted); font-weight: 400;">Reduction Ratio</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="efficiencyChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESSIONS FOR TODAY -->
+  <div class="section-block card">
+    <div class="card-title">
+      <span>🗂️ Today's Client Sessions (<span id="sessions-date-label">Today</span>)</span>
+      <span style="font-size: 12px; color: var(--text-muted); font-weight: normal;">
+        Grouped by client & active conversation window
+      </span>
+    </div>
+    <div style="overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Session</th>
+            <th>Time Window</th>
+            <th>Requests</th>
+            <th>Original Tokens</th>
+            <th>Optimized Tokens</th>
+            <th>Tokens Saved</th>
+            <th>$ Cost Saved</th>
+          </tr>
+        </thead>
+        <tbody id="sessions-tbody">
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
+              No sessions recorded yet today. Connect Cursor or make an API request to begin tracking!
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LIVE REQUEST LOGS & TEST COMPRESSION -->
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 18px;" class="section-block">
+    <!-- Live Feed -->
+    <div class="card">
+      <div class="card-title">
+        <span>⚡ Live Request Stream</span>
+        <span style="font-size: 11px; color: var(--text-muted);" id="stream-count">0 items</span>
+      </div>
+      <div style="overflow-x: auto; max-height: 380px;">
         <table>
           <thead>
             <tr>
               <th>Time</th>
-              <th>Model / Client</th>
+              <th>Client</th>
+              <th>Model</th>
               <th>Original</th>
               <th>Optimized</th>
-              <th>Tokens Saved</th>
+              <th>Saved</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody id="logs-tbody">
             <tr>
-              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
-                Waiting for incoming API requests... Point Cursor / VS Code to <code>http://localhost:8088/v1</code> or use Chrome Extension.
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                Waiting for incoming API calls...
               </td>
             </tr>
           </tbody>
@@ -243,57 +485,209 @@
       </div>
     </div>
 
+    <!-- Quick Prune Tester -->
     <div class="card">
-      <div class="section-title">Quick Integration</div>
-      <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 8px;">
-        Drop into any existing codebase with 1 line:
+      <div class="card-title">🔬 Instant Compression Tester</div>
+      <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">
+        Test how Token Guard prunes whitespace, markdown, and boilerplate from prompts:
       </p>
-      <pre class="code-block">from openai import OpenAI
-
-client = OpenAI(
-    base_url="http://localhost:8088/v1",
-    api_key="your-key"
-)
-# All calls are automatically compressed!</pre>
-
-      <div class="section-title" style="margin-top: 24px;">Test Compression</div>
       <div class="interactive-box">
-        <textarea id="test-input" placeholder="Type or paste verbose text or RAG context here to see compression..."></textarea>
-        <button onclick="testCompression()">Compress Text</button>
-        <div id="test-result" style="margin-top: 10px; font-size: 12px; color: var(--text-muted);"></div>
+        <textarea id="test-input" placeholder="Paste verbose text or code snippet here..."></textarea>
+        <button class="btn btn-cyan" onclick="testCompression()" style="width: 100%; justify-content: center;">
+          ⚡ Compress & Measure
+        </button>
+        <div id="test-result" style="margin-top: 10px; font-size: 12px;"></div>
       </div>
     </div>
   </div>
 
   <script>
+    let timelineChartInstance = null;
+    let efficiencyChartInstance = null;
+
+    // Initialize Chart.js
+    function initCharts() {
+      const ctx1 = document.getElementById('timelineChart').getContext('2d');
+      timelineChartInstance = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Original Tokens',
+              borderColor: '#8b9bb4',
+              backgroundColor: 'rgba(139, 155, 180, 0.15)',
+              data: [],
+              tension: 0.3,
+              fill: true,
+              borderWidth: 2
+            },
+            {
+              label: 'Optimized Tokens',
+              borderColor: '#00f0ff',
+              backgroundColor: 'rgba(0, 240, 255, 0.1)',
+              data: [],
+              tension: 0.3,
+              fill: true,
+              borderWidth: 2
+            },
+            {
+              label: 'Tokens Saved',
+              borderColor: '#00e676',
+              backgroundColor: 'rgba(0, 230, 118, 0.15)',
+              data: [],
+              tension: 0.3,
+              fill: false,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#8b9bb4', font: { family: 'JetBrains Mono', size: 10 } } }
+          },
+          scales: {
+            x: { ticks: { color: '#8b9bb4', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#1f2a3d' } },
+            y: { ticks: { color: '#8b9bb4', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#1f2a3d' } }
+          }
+        }
+      });
+
+      const ctx2 = document.getElementById('efficiencyChart').getContext('2d');
+      efficiencyChartInstance = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['Tokens Saved', 'Tokens Consumed'],
+          datasets: [{
+            data: [0, 1],
+            backgroundColor: ['#00e676', '#1f2a3d'],
+            borderColor: ['#00e676', '#121824'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#8b9bb4', font: { family: 'Inter', size: 11 } } }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
     async function fetchMetrics() {
       try {
         const res = await fetch('/metrics');
         const data = await res.json();
 
-        document.getElementById('stat-saved').textContent = data.total_tokens_saved.toLocaleString();
-        document.getElementById('stat-pct').textContent = data.overall_savings_percentage + '%';
-        document.getElementById('stat-dollars').textContent = '$' + data.estimated_dollars_saved.toFixed(4);
-        document.getElementById('stat-hits').textContent = `${data.cache_hits} / ${data.total_requests}`;
-        document.getElementById('request-count').textContent = `${data.total_requests} requests processed`;
+        // Header date & status
+        document.getElementById('header-today-date').textContent = data.today_date || 'Today';
+        document.getElementById('sessions-date-label').textContent = data.today_date || 'Today';
 
-        const tbody = document.getElementById('logs-tbody');
+        // Check Cursor status
+        const clientStatus = data.client_status || {};
+        const cursorInfo = clientStatus['Cursor'];
+        const cursorPill = document.getElementById('cursor-status-pill');
+        const cursorText = document.getElementById('cursor-status-text');
+        const cursorPulse = document.getElementById('cursor-pulse');
+
+        if (cursorInfo && cursorInfo.is_active) {
+          cursorText.textContent = `Cursor: Connected (${cursorInfo.status_text})`;
+          cursorPulse.style.background = 'var(--accent-green)';
+          cursorPill.style.borderColor = 'rgba(0, 230, 118, 0.4)';
+          cursorPill.style.background = 'rgba(0, 230, 118, 0.08)';
+        } else {
+          cursorText.textContent = 'Cursor: Ready (Listening on :8088)';
+          cursorPulse.style.background = 'var(--accent-cyan)';
+        }
+
+        // Today KPIs
+        document.getElementById('stat-today-saved').textContent = (data.today_tokens_saved || 0).toLocaleString();
+        document.getElementById('today-pct-badge').textContent = `-${data.today_savings_percentage || 0}%`;
+        document.getElementById('stat-today-orig').textContent = (data.today_original_tokens || 0).toLocaleString();
+        document.getElementById('stat-today-opt').textContent = (data.today_optimized_tokens || 0).toLocaleString();
+        document.getElementById('stat-today-cost').textContent = '$' + (data.today_dollars_saved || 0).toFixed(4);
+        document.getElementById('stat-total-cost').textContent = '$' + (data.estimated_dollars_saved || 0).toFixed(4);
+        document.getElementById('stat-total-reqs').textContent = (data.total_requests || 0).toLocaleString();
+        document.getElementById('stat-today-reqs').textContent = `${data.today_requests || 0} today`;
+        document.getElementById('stat-cache-hits').textContent = `${data.cache_hits || 0}`;
+
+        // Active clients list
+        const clientNames = Object.keys(clientStatus);
+        document.getElementById('stat-client-count').textContent = clientNames.length > 0 ? clientNames.length : 1;
+        document.getElementById('stat-active-client-names').textContent = clientNames.length > 0 ? clientNames.join(', ') : 'Cursor, Extensions';
+
+        // Update Charts
+        if (data.timeline_chart && timelineChartInstance) {
+          const tc = data.timeline_chart;
+          timelineChartInstance.data.labels = tc.labels;
+          timelineChartInstance.data.datasets[0].data = tc.original;
+          timelineChartInstance.data.datasets[1].data = tc.optimized;
+          timelineChartInstance.data.datasets[2].data = tc.saved;
+          timelineChartInstance.update();
+        }
+
+        if (efficiencyChartInstance) {
+          const saved = data.total_tokens_saved || 0;
+          const consumed = data.total_optimized_tokens || (saved > 0 ? 1 : 1);
+          efficiencyChartInstance.data.datasets[0].data = [saved, consumed];
+          efficiencyChartInstance.update();
+        }
+
+        // Render Today's Sessions
+        const sessionsTbody = document.getElementById('sessions-tbody');
+        if (data.sessions_today && data.sessions_today.length > 0) {
+          sessionsTbody.innerHTML = data.sessions_today.map(s => {
+            const isCursor = s.client.toLowerCase().includes('cursor');
+            const pillClass = isCursor ? 'client-pill client-cursor' : 'client-pill client-chrome';
+            return `
+              <tr>
+                <td><span class="${pillClass}">⚡ ${s.client}</span></td>
+                <td><b>${s.session_id}</b></td>
+                <td style="color: var(--text-muted);">${s.time_span}</td>
+                <td>${s.requests}</td>
+                <td>${s.original_tokens.toLocaleString()}</td>
+                <td>${s.optimized_tokens.toLocaleString()}</td>
+                <td style="color: var(--accent-green); font-weight: 600;">+${s.tokens_saved.toLocaleString()} (${s.savings_percentage}%)</td>
+                <td style="color: var(--accent-purple); font-weight: 600;">$${s.cost_saved.toFixed(4)}</td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          sessionsTbody.innerHTML = `
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                No sessions recorded yet today. Connect Cursor or make an API request to begin tracking!
+              </td>
+            </tr>
+          `;
+        }
+
+        // Render Recent Logs Feed
+        const logsTbody = document.getElementById('logs-tbody');
+        document.getElementById('stream-count').textContent = `${data.recent_requests ? data.recent_requests.length : 0} items`;
         if (data.recent_requests && data.recent_requests.length > 0) {
-          tbody.innerHTML = data.recent_requests.map(req => {
-            const isHit = req.cache_status.includes('hit');
+          logsTbody.innerHTML = data.recent_requests.map(req => {
+            const isHit = (req.cache_status || '').includes('hit');
             const pillClass = isHit ? 'pill-hit' : 'pill-opt';
+            const clientName = req.client || 'Cursor';
             return `
               <tr>
                 <td>${req.time_str}</td>
+                <td><span style="color: var(--accent-cyan); font-weight: 500;">${clientName}</span></td>
                 <td><span style="color: var(--accent-purple);">${req.model}</span></td>
                 <td>${req.original_tokens}</td>
                 <td>${req.optimized_tokens}</td>
                 <td style="color: var(--accent-green); font-weight: 600;">+${req.tokens_saved} (${req.savings_percentage}%)</td>
-                <td><span class="pill ${pillClass}">${req.cache_status}</span></td>
+                <td><span class="${pillClass}">${req.cache_status}</span></td>
               </tr>
             `;
           }).join('');
         }
+
       } catch (err) {
         console.error("Failed fetching metrics:", err);
       }
@@ -309,10 +703,10 @@ client = OpenAI(
       });
       const data = await res.json();
       document.getElementById('test-result').innerHTML = `
-        <div style="color: var(--accent-green); margin-bottom: 6px;">
+        <div style="color: var(--accent-green); font-weight: 600; margin-bottom: 6px;">
           Saved <b>${data.saved_tokens} tokens</b> (${data.savings_percentage}% reduction)
         </div>
-        <div class="code-block">${data.compressed_text}</div>
+        <div style="background: #090d16; border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; max-height: 100px; overflow-y: auto;">${data.compressed_text}</div>
       `;
     }
 
@@ -325,8 +719,18 @@ client = OpenAI(
       }
     }
 
-    setInterval(fetchMetrics, 2000);
-    fetchMetrics();
+    async function confirmResetAll() {
+      if (confirm("Are you sure you want to reset all Token Guard metrics and clear the database?")) {
+        await fetch('/metrics/reset', { method: 'POST' });
+        fetchMetrics();
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initCharts();
+      fetchMetrics();
+      setInterval(fetchMetrics, 2000);
+    });
   </script>
 </body>
 </html>
