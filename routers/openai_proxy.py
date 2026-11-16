@@ -253,10 +253,37 @@ async def chat_completions(request: Request):
             "Authorization": f"Bearer {api_key}"
         }
 
-    # Standard OpenAI-format forwarder (used by OpenAI, Gemini, DeepSeek)
+    # Standard OpenAI-format forwarder (used by OpenAI, Grok, Gemini, DeepSeek, etc.)
     if stream:
         async def stream_generator():
             async with client.stream("POST", upstream_url, json=optimized_payload, headers=upstream_headers) as upstream_resp:
+                if upstream_resp.status_code != 200:
+                    err_bytes = await upstream_resp.aread()
+                    err_str = err_bytes.decode("utf-8", errors="ignore")
+                    # Send friendly SSE error chunk so Cursor displays the explanation in chat
+                    err_msg = (
+                        f"\n\n⚠️ **[Token Guard — Upstream Error {upstream_resp.status_code}]**\n\n"
+                        f"The model provider rejected the request:\n```\n{err_str}\n```\n\n"
+                        f"**Troubleshooting:**\n"
+                        f"- You selected model: `{model}`\n"
+                        f"- Upstream URL: `{upstream_url}`\n"
+                        f"- If using **Grok**, ensure you configured an xAI API key (`xai-...`) in Cursor or `.env`.\n"
+                        f"- If using an **OpenAI key** (`sk-...`), switch model in Cursor to **`gpt-4o`** or **`gpt-4o-mini`**."
+                    )
+                    error_chunk = {
+                        "id": "tg-err",
+                        "object": "chat.completion.chunk",
+                        "model": model,
+                        "choices": [{
+                            "index": 0,
+                            "delta": {"content": err_msg},
+                            "finish_reason": "stop"
+                        }]
+                    }
+                    yield f"data: {json.dumps(error_chunk)}\n\n".encode("utf-8")
+                    yield b"data: [DONE]\n\n"
+                    return
+
                 async for chunk in upstream_resp.aiter_bytes():
                     yield chunk
 
