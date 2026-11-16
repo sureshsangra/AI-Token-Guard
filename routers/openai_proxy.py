@@ -39,12 +39,16 @@ def detect_client(request: Request) -> str:
     for k, v in request.headers.items():
         k_l = k.lower()
         v_l = v.lower()
+        if "antigravity" in k_l or "antigravity" in v_l or "agy" in k_l:
+            return "Antigravity"
         if "cursor" in k_l or "cursor" in v_l:
             return "Cursor"
         if "continue" in k_l or "continue" in v_l:
             return "Continue.dev"
         if "cline" in k_l or "cline" in v_l or "roo" in k_l:
             return "Cline"
+    if "antigravity" in ua or "agy" in ua:
+        return "Antigravity"
     if "cursor" in ua:
         return "Cursor"
     if "code" in ua or "vscode" in ua:
@@ -58,7 +62,7 @@ def detect_client(request: Request) -> str:
     # Official TypeScript SDK headers commonly used by Cursor & VS Code extensions
     if request.headers.get("x-stainless-os") or request.headers.get("x-stainless-lang"):
         return "Cursor"
-    return "Cursor" if "localhost" in request.headers.get("host", "") else "API Client"
+    return "API Client"
 
 @router.post("/chat/completions")
 async def chat_completions(request: Request):

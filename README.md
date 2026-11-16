@@ -212,35 +212,70 @@ llm = OpenAI(
 
 ---
 
-## IDE Integration
+## Integration Guides
 
-### Cursor
-1. Open **Settings → Features → Models**.
-2. Enable **Override OpenAI Base URL**.
-3. Set URL: `http://localhost:8088/v1`
+### Google Antigravity (CLI, IDE & SDK)
 
-### VS Code — Cline / Roo Code
-1. Open the extension settings.
-2. **API Provider** → `OpenAI Compatible`
-3. **Base URL** → `http://localhost:8088/v1`
+Token Guard integrates seamlessly with Google Antigravity:
 
-### VS Code — Continue.dev
-Add to `~/.continue/config.json`:
-```json
-{
-  "models": [{
-    "title": "Token Guard GPT-4o",
-    "provider": "openai",
-    "model": "gpt-4o",
-    "apiBase": "http://localhost:8088/v1",
-    "apiKey": "your-api-key"
-  }]
-}
+**Option 1: Universal Environment Variables**
+Set these in your shell or `.env` before running Antigravity sessions:
+```bash
+export OPENAI_BASE_URL="http://localhost:8088/v1"
+export OPENAI_API_BASE="http://localhost:8088/v1"
 ```
+
+**Option 2: Antigravity Python SDK & Agents**
+```python
+from openai import OpenAI
+
+# Connect Antigravity agents directly through Token Guard
+client = OpenAI(
+    base_url="http://localhost:8088/v1",
+    api_key="your-api-key"
+)
+```
+
+**Option 3: Antigravity IDE (VS Code based)**
+In your workspace `.agents/` or IDE settings:
+- Base URL: `http://localhost:8088/v1`
 
 ---
 
-## Browser Extension (ChatGPT / Claude / Gemini Web)
+### Cursor
+
+To ensure Cursor routes requests through Token Guard:
+1. Open **Cursor Settings** (`Cmd + ,` or top-right gear icon) → **Models** → **API Keys**.
+2. ⚠️ **Critical:** Toggle **`Use OpenAI API Key`** to **ON** (green).
+3. Toggle **`Override OpenAI Base URL`** to **ON**.
+4. Set Base URL to:
+   ```text
+   http://localhost:8088/v1
+   ```
+5. In Cursor Chat, select any supported model (**`gpt-4o`**, **`grok-2`**, **`claude-3-5-sonnet`**, etc.).
+6. *(Optional)* Install our status-bar indicator in `~/.cursor/extensions/token-guard-cursor` to see `🛡️ Token Guard: Active` in Cursor's bottom bar!
+
+---
+
+### VS Code — Cline / Roo Code / Continue.dev
+
+- **Cline / Roo Code:** Set **API Provider** → `OpenAI Compatible`, **Base URL** → `http://localhost:8088/v1`
+- **Continue.dev:** Add to `~/.continue/config.json`:
+  ```json
+  {
+    "models": [{
+      "title": "Token Guard Proxy",
+      "provider": "openai",
+      "model": "gpt-4o",
+      "apiBase": "http://localhost:8088/v1",
+      "apiKey": "your-key"
+    }]
+  }
+  ```
+
+---
+
+### Python — OpenAI SDK (Universal)
 
 For users of the web interfaces:
 

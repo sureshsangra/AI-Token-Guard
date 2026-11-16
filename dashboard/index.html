@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Token Guard — Live LLM Token Reduction & Cost Dashboard</title>
+  <title>Token Guard — Universal LLM Token Optimization & Cost Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
@@ -34,7 +34,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
       padding-bottom: 18px;
       border-bottom: 1px solid var(--border);
       flex-wrap: wrap;
@@ -120,6 +120,50 @@
     }
     .btn-cyan:hover { background: rgba(0, 240, 255, 0.22); }
 
+    /* Universal Integration Switcher */
+    .integration-banner {
+      background: #121824;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 22px;
+    }
+
+    .tab-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: #1a2233;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn.active {
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+    }
+
+    .tab-content {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: #090d16;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: #a5d6ff;
+      overflow-x: auto;
+    }
+
     /* Stats Grid */
     .stats-grid {
       display: grid;
@@ -133,7 +177,7 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 18px;
-      transition: transform 0.15s ease, border-color 0.15s ease;
+      transition: border-color 0.15s ease;
     }
     .stat-card:hover {
       border-color: rgba(0, 240, 255, 0.25);
@@ -247,6 +291,11 @@
       color: var(--accent-cyan);
       border: 1px solid rgba(0, 240, 255, 0.3);
     }
+    .client-antigravity {
+      background: rgba(0, 240, 255, 0.12);
+      color: var(--accent-cyan);
+      border-color: rgba(0, 240, 255, 0.4);
+    }
     .client-cursor {
       background: rgba(179, 136, 255, 0.12);
       color: var(--accent-purple);
@@ -256,6 +305,11 @@
       background: rgba(0, 230, 118, 0.12);
       color: var(--accent-green);
       border-color: rgba(0, 230, 118, 0.35);
+    }
+    .client-sdk {
+      background: rgba(255, 179, 0, 0.12);
+      color: var(--accent-amber);
+      border-color: rgba(255, 179, 0, 0.35);
     }
 
     .pill-hit {
@@ -271,21 +325,6 @@
       border: 1px solid var(--accent-cyan);
       padding: 2px 8px;
       border-radius: 4px;
-    }
-
-    /* Cursor Setup Tip Banner */
-    .tip-banner {
-      background: linear-gradient(90deg, rgba(179, 136, 255, 0.08), rgba(0, 240, 255, 0.04));
-      border: 1px solid rgba(179, 136, 255, 0.25);
-      border-radius: 10px;
-      padding: 12px 18px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-      flex-wrap: wrap;
-      gap: 12px;
     }
 
     .interactive-box textarea {
@@ -308,16 +347,16 @@
   <!-- HEADER -->
   <header>
     <div class="logo-group">
-      <h1>🛡️ Token Guard <span style="font-size: 11px; padding: 2px 8px; border-radius: 6px; background: rgba(0,230,118,0.12); color: var(--accent-green); border: 1px solid var(--accent-green);">v1.0.0 Ready</span></h1>
+      <h1>🛡️ Token Guard <span style="font-size: 11px; padding: 2px 8px; border-radius: 6px; background: rgba(0,230,118,0.12); color: var(--accent-green); border: 1px solid var(--accent-green);">Universal Proxy Active</span></h1>
       <p style="color: var(--text-muted); font-size: 12px; margin-top: 3px;">
-        Universal Token Reduction & Real-time Cost Savings Proxy
+        Multi-Model LLM Token Reduction & Real-time Cost Savings
       </p>
     </div>
 
     <div class="header-actions">
-      <div class="status-badge" id="cursor-status-pill">
-        <span class="status-pulse" id="cursor-pulse"></span>
-        <span id="cursor-status-text">Cursor: Listening on :8088</span>
+      <div class="status-badge" id="client-status-pill">
+        <span class="status-pulse" id="client-pulse"></span>
+        <span id="client-status-text">Proxy: Ready on :8088</span>
       </div>
 
       <div class="status-badge" style="border-color: rgba(255,255,255,0.15); color: var(--text-muted);">
@@ -334,17 +373,32 @@
     </div>
   </header>
 
-  <!-- CURSOR SETUP VERIFICATION NOTICE -->
-  <div class="tip-banner">
-    <div>
-      <span style="font-weight: 600; color: var(--accent-purple);">💡 Connecting Cursor to Token Guard:</span>
-      <span style="color: var(--text-muted); margin-left: 6px;">
-        1. In Cursor Settings → Models: toggle <b>"Use OpenAI API Key" ON</b> and set Base URL to <code>http://localhost:8088/v1</code>.
-        2. In Cursor Chat, select an OpenAI model (e.g. <b>gpt-4o</b>).
+  <!-- UNIVERSAL INTEGRATION SELECTOR -->
+  <div class="integration-banner">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+      <span style="font-size: 13px; font-weight: 600; color: var(--text);">
+        🔌 Universal Drop-in Endpoint: <code style="color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace;">http://localhost:8088/v1</code>
+      </span>
+      <span style="font-size: 11px; color: var(--text-muted);">
+        Compatible with OpenAI, Grok, Claude, Gemini, DeepSeek, Mistral, Groq & Ollama
       </span>
     </div>
-    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-cyan);">
-      Base URL: http://localhost:8088/v1
+
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('antigravity')">Antigravity</button>
+      <button class="tab-btn" onclick="switchTab('cursor')">Cursor</button>
+      <button class="tab-btn" onclick="switchTab('vscode')">VS Code / Cline</button>
+      <button class="tab-btn" onclick="switchTab('python')">Python / OpenAI SDK</button>
+      <button class="tab-btn" onclick="switchTab('web')">Chrome Web Extension</button>
+    </div>
+
+    <div id="tab-snippet" class="tab-content">
+# Antigravity (Terminal / CLI / Python SDK):
+export OPENAI_BASE_URL="http://localhost:8088/v1"
+export OPENAI_API_BASE="http://localhost:8088/v1"
+# In your Python scripts or agent calls:
+from openai import OpenAI
+client = OpenAI(base_url="http://localhost:8088/v1", api_key="sk-antigravity")
     </div>
   </div>
 
@@ -364,7 +418,7 @@
     <div class="stat-card">
       <div class="stat-label">
         <span>Today $ Cost Saved</span>
-        <span style="color: var(--accent-purple);">Est. Model Rates</span>
+        <span style="color: var(--accent-purple);">Live Model Pricing</span>
       </div>
       <div class="stat-value val-purple" id="stat-today-cost">$0.0000</div>
       <div class="stat-sub">
@@ -388,9 +442,9 @@
         <span>Active Clients</span>
         <span style="color: var(--accent-amber);">Auto-Detected</span>
       </div>
-      <div class="stat-value val-amber" id="stat-client-count">1</div>
+      <div class="stat-value val-amber" id="stat-client-count">0</div>
       <div class="stat-sub" id="stat-active-client-names">
-        Cursor, Chrome Extension
+        Listening for connections...
       </div>
     </div>
   </div>
@@ -445,7 +499,7 @@
         <tbody id="sessions-tbody">
           <tr>
             <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
-              No sessions recorded yet today. Connect Cursor or make an API request to begin tracking!
+              No sessions recorded yet today. Point Antigravity, Cursor, VS Code, or any SDK to <code>http://localhost:8088/v1</code> to begin saving tokens!
             </td>
           </tr>
         </tbody>
@@ -477,7 +531,7 @@
           <tbody id="logs-tbody">
             <tr>
               <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">
-                Waiting for incoming API calls...
+                Waiting for incoming API calls... Point your client to <code>http://localhost:8088/v1</code>.
               </td>
             </tr>
           </tbody>
@@ -504,6 +558,20 @@
   <script>
     let timelineChartInstance = null;
     let efficiencyChartInstance = null;
+
+    const SNIPPETS = {
+      antigravity: `# In Antigravity terminal / session:\nexport OPENAI_BASE_URL="http://localhost:8088/v1"\nexport OPENAI_API_BASE="http://localhost:8088/v1"\n\n# Or in Antigravity Python scripts:\nfrom openai import OpenAI\nclient = OpenAI(base_url="http://localhost:8088/v1", api_key="sk-antigravity")`,
+      cursor: `// In Cursor Settings -> Models -> API Keys:\n// 1. Toggle "Use OpenAI API Key" to ON\n// 2. Toggle "Override OpenAI Base URL" to ON\n// 3. Set Base URL to: http://localhost:8088/v1\n// 4. In Cursor Chat, select any model (gpt-4o, grok-2, etc.)`,
+      vscode: `// In VS Code (Cline, Continue.dev, or Roo Code):\n{\n  "apiProvider": "openai",\n  "baseURL": "http://localhost:8088/v1",\n  "apiKey": "sk-local"\n}`,
+      python: `from openai import OpenAI\n\n# Works transparently with GPT-4o, Grok, Claude, Gemini, DeepSeek!\nclient = OpenAI(\n    base_url="http://localhost:8088/v1",\n    api_key="your-api-key"\n)\nresponse = client.chat.completions.create(\n    model="grok-2", # or "gpt-4o", "gemini-2.0-flash", "claude-3-5-sonnet"\n    messages=[{"role": "user", "content": "Write a fast Python quicksort."}]\n)`,
+      web: `// Chrome Extension for ChatGPT, Claude.ai & Gemini Web:\n// 1. Open chrome://extensions -> Load Unpacked\n// 2. Select token_guard/browser_extension folder\n// 3. The extension automatically prunes prompt bloat before sending!`
+    };
+
+    function switchTab(tabKey) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-snippet').textContent = SNIPPETS[tabKey] || SNIPPETS['antigravity'];
+    }
 
     // Initialize Chart.js
     function initCharts() {
@@ -587,21 +655,29 @@
         document.getElementById('header-today-date').textContent = data.today_date || 'Today';
         document.getElementById('sessions-date-label').textContent = data.today_date || 'Today';
 
-        // Check Cursor status
+        // Check dynamic active client status
         const clientStatus = data.client_status || {};
-        const cursorInfo = clientStatus['Cursor'];
-        const cursorPill = document.getElementById('cursor-status-pill');
-        const cursorText = document.getElementById('cursor-status-text');
-        const cursorPulse = document.getElementById('cursor-pulse');
+        const clientNames = Object.keys(clientStatus);
+        const clientPill = document.getElementById('client-status-pill');
+        const clientText = document.getElementById('client-status-text');
+        const clientPulse = document.getElementById('client-pulse');
 
-        if (cursorInfo && cursorInfo.is_active) {
-          cursorText.textContent = `Cursor: Connected (${cursorInfo.status_text})`;
-          cursorPulse.style.background = 'var(--accent-green)';
-          cursorPill.style.borderColor = 'rgba(0, 230, 118, 0.4)';
-          cursorPill.style.background = 'rgba(0, 230, 118, 0.08)';
+        const activeClientName = clientNames.find(c => clientStatus[c] && clientStatus[c].is_active);
+
+        if (activeClientName) {
+          const info = clientStatus[activeClientName];
+          clientText.textContent = `${activeClientName}: Connected (${info.status_text})`;
+          clientPulse.style.background = 'var(--accent-green)';
+          clientPill.style.borderColor = 'rgba(0, 230, 118, 0.4)';
+          clientPill.style.background = 'rgba(0, 230, 118, 0.08)';
+        } else if (clientNames.length > 0) {
+          clientText.textContent = `Proxy: Idle (${clientNames.length} clients registered)`;
+          clientPulse.style.background = 'var(--accent-cyan)';
+          clientPill.style.borderColor = 'rgba(0, 240, 255, 0.3)';
+          clientPill.style.background = 'rgba(0, 240, 255, 0.08)';
         } else {
-          cursorText.textContent = 'Cursor: Ready (Listening on :8088)';
-          cursorPulse.style.background = 'var(--accent-cyan)';
+          clientText.textContent = 'Proxy: Ready on :8088';
+          clientPulse.style.background = 'var(--accent-cyan)';
         }
 
         // Today KPIs
@@ -616,9 +692,8 @@
         document.getElementById('stat-cache-hits').textContent = `${data.cache_hits || 0}`;
 
         // Active clients list
-        const clientNames = Object.keys(clientStatus);
-        document.getElementById('stat-client-count').textContent = clientNames.length > 0 ? clientNames.length : 1;
-        document.getElementById('stat-active-client-names').textContent = clientNames.length > 0 ? clientNames.join(', ') : 'Cursor, Extensions';
+        document.getElementById('stat-client-count').textContent = clientNames.length;
+        document.getElementById('stat-active-client-names').textContent = clientNames.length > 0 ? clientNames.join(', ') : 'Listening for connections...';
 
         // Update Charts
         if (data.timeline_chart && timelineChartInstance) {
@@ -641,8 +716,13 @@
         const sessionsTbody = document.getElementById('sessions-tbody');
         if (data.sessions_today && data.sessions_today.length > 0) {
           sessionsTbody.innerHTML = data.sessions_today.map(s => {
-            const isCursor = s.client.toLowerCase().includes('cursor');
-            const pillClass = isCursor ? 'client-pill client-cursor' : 'client-pill client-chrome';
+            let pillClass = 'client-pill';
+            const cLower = (s.client || '').toLowerCase();
+            if (cLower.includes('antigravity')) pillClass += ' client-antigravity';
+            else if (cLower.includes('cursor')) pillClass += ' client-cursor';
+            else if (cLower.includes('chrome') || cLower.includes('browser')) pillClass += ' client-chrome';
+            else pillClass += ' client-sdk';
+
             return `
               <tr>
                 <td><span class="${pillClass}">⚡ ${s.client}</span></td>
@@ -660,7 +740,7 @@
           sessionsTbody.innerHTML = `
             <tr>
               <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
-                No sessions recorded yet today. Connect Cursor or make an API request to begin tracking!
+                No sessions recorded yet today. Point Antigravity, Cursor, VS Code, or any SDK to <code>http://localhost:8088/v1</code> to begin saving tokens!
               </td>
             </tr>
           `;
@@ -673,7 +753,7 @@
           logsTbody.innerHTML = data.recent_requests.map(req => {
             const isHit = (req.cache_status || '').includes('hit');
             const pillClass = isHit ? 'pill-hit' : 'pill-opt';
-            const clientName = req.client || 'Cursor';
+            const clientName = req.client || 'Client';
             return `
               <tr>
                 <td>${req.time_str}</td>

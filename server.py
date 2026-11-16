@@ -50,6 +50,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def request_logger_middleware(request: Request, call_next):
+    path = request.url.path
+    if path not in ["/metrics", "/favicon.ico"]:
+        ua = request.headers.get("user-agent", "Unknown Client")[:40]
+        print(f"🛡️  [TOKEN GUARD] {request.method} {path} | Client UA: {ua}")
+    response = await call_next(request)
+    return response
+
 # Include Routers
 app.include_router(openai_router)
 app.include_router(metrics_router)
